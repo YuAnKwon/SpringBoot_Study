@@ -20,4 +20,15 @@ public class Article {
     @Column
     private String content;
 
+
+    //  수정할 내용이 있는 경우에만 동작하면 된다.
+    public void patch(Article article) {
+        //this는 patch() 메서드를 호출한 객체를 의미
+        if (article.title != null) {
+            this.title = article.title;
+        }
+        if (article.content != null) {
+            this.content = article.content;
+        }
+    }
 }
