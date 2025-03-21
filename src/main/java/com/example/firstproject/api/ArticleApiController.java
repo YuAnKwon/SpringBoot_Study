@@ -19,7 +19,6 @@ import java.util.List;
 public class ArticleApiController {
     @Autowired
     private ArticleService articleService;
-    private ArticleRepository articleRepository;
 
     // GET
     @GetMapping("/api/articles")
@@ -28,8 +27,11 @@ public class ArticleApiController {
     }
 
     @GetMapping("/api/articles/{id}")
-    public Article show(@PathVariable Long id){
-        return articleService.show(id);
+    public ResponseEntity<Article> show(@PathVariable Long id){
+        Article article = articleService.show(id);
+        return (article != null) ?
+                ResponseEntity.status(HttpStatus.OK).body(article):
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     // POST
@@ -57,6 +59,14 @@ public class ArticleApiController {
         Article deleted = articleService.delete(id);
         return (deleted !=null) ?
                 ResponseEntity.status(HttpStatus.NO_CONTENT).build():
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+    @PostMapping("/api/transaction-test")
+    public ResponseEntity<List <Article>> transactionTest(@RequestBody List<ArticleForm> dtos){
+        List<Article> createdList = articleService.createAricles(dtos);
+        return (createdList !=null) ?
+                ResponseEntity.status(HttpStatus.OK).body(createdList):
                 ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 }

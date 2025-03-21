@@ -5,13 +5,12 @@ import com.example.firstproject.entity.Article;
 import com.example.firstproject.repository.ArticleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service // 서비스 객체 생성
@@ -75,5 +74,19 @@ public class ArticleService {
         //3. 삭제하고 정상응답 반환하기.
         articleRepository.delete(target);
         return target; //build메서드는 body(null)과 같다.
+    }
+
+    @Transactional //해당 메서드는 하나의 트랜잭션으로 묶인다. (실패하더라도 롤백함)
+    public List<Article> createAricles(List<ArticleForm> dtos) {
+        // 1. dto 묶음을 엔티티 묶음으로 변환하기
+        // dto를 스트림화함. map()으로 dto가 하나하나 올때마다 to.Entity()를 수행해 매핑하고 리스트로 묶기.
+        List<Article> articleList = dtos.stream().map(dto -> dto.toEntity()).collect(Collectors.toList());
+
+        // 2. 엔티티 묶음을 DB에 저장하기
+        articleList.stream().forEach(article -> articleRepository.save(article));
+
+        // 강제로 예외 상황 발생시키기
+        articleRepository.findById(-1L).orElseThrow(()-> new IllegalArgumentException("결제 실패 !"));
+        return articleList;
     }
 }
