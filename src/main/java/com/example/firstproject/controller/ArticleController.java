@@ -1,8 +1,11 @@
 package com.example.firstproject.controller;
 
 import com.example.firstproject.dto.ArticleForm;
+import com.example.firstproject.dto.CommentDto;
 import com.example.firstproject.entity.Article;
 import com.example.firstproject.repository.ArticleRepository;
+import com.example.firstproject.repository.CommentRepository;
+import com.example.firstproject.service.CommentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,12 +16,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j // 로깅 기능임
 @Controller
 public class ArticleController {
     @Autowired
     private ArticleRepository articleRepository; // articleRepository 객체 선언.
+    @Autowired
+    private CommentService commentService;
 
     // new.mustache 화면 반환
     @GetMapping("/articles/new")
@@ -29,18 +35,15 @@ public class ArticleController {
     // 데이터 저장
     @PostMapping("/articles/create")
     public String createArticle(ArticleForm form) {
-        //System.out.println(form.toString());
         log.info(form.toString());
 
         // 1. DTO를 엔티티로 변환하기
         Article article = form.toEntity();
         log.info(article.toString());
-        //System.out.println(article.toString());
 
         // 2. 리파지터리로 엔티티를 DB에 저장
         Article saved = articleRepository.save(article); //article 엔티티를 저장해 saved 객체에 반환.
         log.info(saved.toString());
-        //System.out.println(saved.toString());
         return "redirect:/articles/" + saved.getId(); // 리다이렉트 (클라이언트의 요청을 받아 새로운 URL 주소로 재요청하라 지시)
     }
 
@@ -51,11 +54,12 @@ public class ArticleController {
         // 1 id를 조회해 DB에서 데이터 갖고오기
         // 데이터를 갖고 오는 주체는 리파지터리.
         Article articleEntity = articleRepository.findById(id).orElse(null); //id 값으로 데이터를 찾을 때 없으면 null로 반환.
-        //Optional 타입으로 반환.
+        List<CommentDto> commentsDtos = commentService.comments(id);
 
         // 2 가져온 데이터 모델에 등록
         // MVC 패턴에 따라 조회한 데이터를 뷰 페이지에서 보여주기 위함.
         model.addAttribute("article",articleEntity); //article이라는 이름에 articleEntity 객체 등록.
+        model.addAttribute("commentDtos", commentsDtos);
 
         // 3 데이터를 사용자에게 보여주기 위한 뷰 페이지 만들고 반환
         return "articles/show";
@@ -120,4 +124,5 @@ public class ArticleController {
         // 3. 결과 페이지로 리다이렉트하기
         return "redirect:/articles";
     }
+
 }
